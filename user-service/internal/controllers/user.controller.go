@@ -1,6 +1,9 @@
 package controllers
 
-import "music-streaming-microservices/user-service/internal/services"
+import (
+	"github.com/gin-gonic/gin"
+	"music-streaming-microservices/user-service/internal/services"
+)
 
 type UserController struct {
 	userServices services.IUserService
@@ -12,6 +15,5 @@ func NewUserController(services services.IUserService) *UserController {
 	}
 }
 
-func (uc *UserController) Register() {
-	return
+func (uc *UserController) Register(c *gin.Context) {
 }

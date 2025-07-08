@@ -14,7 +14,7 @@ func (ur *UserRouter) InitUserRouter(router *gin.RouterGroup) {
 
 	publicUserRouter := router.Group("/user")
 	{
-		publicUserRouter.POST("/signup", userController.Register)
+		publicUserRouter.GET("/signup", userController.Register)
 	}
 
 	privateUserRouter := router.Group("/user")
