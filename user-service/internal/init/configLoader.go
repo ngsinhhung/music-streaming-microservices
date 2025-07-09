@@ -17,9 +17,11 @@ func ConfigLoader() {
 		panic(fmt.Errorf("Fatal error config file: %s \n", err))
 	}
 
-	fmt.Println("Server Port:: ", viper.GetInt("server.port"))
-
 	if err := viper.Unmarshal(&global.Configs); err != nil {
 		panic(fmt.Errorf("Fatal error unmarshal config file: %s \n", err))
 	}
+
+	fmt.Println("Load Configs Successfully")
+	fmt.Println("Server Port:: ", viper.GetInt("server.port"))
+
 }
