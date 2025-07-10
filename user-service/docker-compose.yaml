@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: mysecretpassword
+      POSTGRES_DB: user_service
+    ports:
+      - "5433:5432"
+    volumes:
+      - "./pgData:/var/lib/postgresql/data"
+
