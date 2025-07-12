@@ -1,4 +1,4 @@
-package models
+package entities
 
 type Users struct {
 	id       int
@@ -6,5 +6,4 @@ type Users struct {
 	email    string
 	phone    string
 	password string
-	roles    []Roles
 }

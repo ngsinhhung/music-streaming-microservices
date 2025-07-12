@@ -29,6 +29,9 @@ downse:
 resetse:
 	@GOOSE_DRIVER=$(GOOSE_DRIVER) GOOSE_DBSTRING=$(GOOSE_DBSTRING) goose -dir=$(GOOSE_MIGRATION_DIR) reset
 
+genSqlc:
+	sqlc generate
+
 .PHONY: run upse downse resetse
 
 .PHONY: air

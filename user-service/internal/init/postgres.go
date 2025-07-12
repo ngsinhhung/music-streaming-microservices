@@ -14,12 +14,15 @@ func InitPostgres() {
 
 	var s = fmt.Sprintf(stringConnPattern, pgConfig.User, pgConfig.Password, pgConfig.Host, pgConfig.Port, pgConfig.Database)
 
-	conn, err := pgx.Connect(context.Background(), s)
+	ctx := context.Background()
+	conn, err := pgx.Connect(ctx, s)
 	if err != nil {
 		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
 		os.Exit(1)
 	}
-	defer conn.Close(context.Background())
+	defer conn.Close(ctx)
+
+	global.PostgresConn = conn
 
 	fmt.Println("Connected to database")
 
