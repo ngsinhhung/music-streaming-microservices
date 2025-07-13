@@ -6,14 +6,22 @@ import (
 )
 
 type Response struct {
-	StatusCode int
-	Message    string
-	Data       interface{}
+	StatusCode int         `json:"status_code"`
+	Message    string      `json:"message"`
+	Data       interface{} `json:"data"`
 }
 
-func SuccessResponse(c *gin.Context, key string, data interface{}) {
-	code := r.StatusCode[key]
-	message := r.ReasonPhrases[key]
+type ErrorResponseData struct {
+	StatusCode int         `json:"status_code"`
+	Message    string      `json:"message"`
+	Detail     interface{} `json:"detail"`
+}
+
+func SuccessResponse(c *gin.Context, code int, message string, data interface{}) {
+	if message == "" {
+		message = r.ReasonPhrases[code]
+	}
+
 	c.JSON(code, Response{
 		StatusCode: code,
 		Message:    message,
@@ -21,12 +29,13 @@ func SuccessResponse(c *gin.Context, key string, data interface{}) {
 	})
 }
 
-func ErrorResponse(c *gin.Context, key string, data interface{}) {
-	code := r.StatusCode[key]
-	message := r.ReasonPhrases[key]
-	c.JSON(code, Response{
+func ErrorResponse(c *gin.Context, code int, message string, detail interface{}) {
+	if message == "" {
+		message = r.ReasonPhrases[code]
+	}
+	c.JSON(code, ErrorResponseData{
 		StatusCode: code,
 		Message:    message,
-		Data:       data,
+		Detail:     detail,
 	})
 }
