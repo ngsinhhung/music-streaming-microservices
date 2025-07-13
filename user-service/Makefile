@@ -6,7 +6,7 @@ GOOSE_DBSTRING=postgres://root:mysecretpassword@localhost:5433/user_service
 APP_NAME := server
 
 dev:
-	go run ./$(APP_NAME)
+	go run ./cmd/$(APP_NAME)
 
 run:
 	docker compose up -d && go run go run ./$(APP_NAME)
