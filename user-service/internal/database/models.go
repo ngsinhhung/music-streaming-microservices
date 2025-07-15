@@ -14,11 +14,13 @@ type Role struct {
 }
 
 type User struct {
-	ID       int32
-	Avatar   pgtype.Text
-	Email    string
-	Name     pgtype.Text
-	Password pgtype.Text
+	ID        int32
+	Avatar    string
+	Email     string
+	Name      string
+	Password  string
+	CreatedAt pgtype.Timestamp
+	UpdatedAt pgtype.Timestamp
 }
 
 type UserRole struct {
