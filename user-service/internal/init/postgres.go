@@ -20,7 +20,6 @@ func InitPostgres() {
 		fmt.Fprintf(os.Stderr, "Unable to connect to database: %v\n", err)
 		os.Exit(1)
 	}
-	defer conn.Close(ctx)
 
 	global.PostgresConn = conn
 
