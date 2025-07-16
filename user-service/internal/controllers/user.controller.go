@@ -25,11 +25,10 @@ func (uc *UserController) Register(c *gin.Context) {
 		return
 	}
 	code, msg, data := uc.userServices.Register(userRegisterRequest)
-	if code == r.CREATED {
+	if code == r.OK {
 		response.SuccessResponse(c, code, msg, data)
-
 	} else {
 		response.ErrorResponse(c, code, msg, nil)
 	}
-
+	return
 }
