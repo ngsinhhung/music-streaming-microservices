@@ -6,7 +6,7 @@ GOOSE_DBSTRING=postgres://root:mysecretpassword@localhost:5433/user_service
 APP_NAME := server
 
 dev:
-	go run ./$(APP_NAME)
+	go run ./cmd/$(APP_NAME)
 
 run:
 	docker compose up -d && go run go run ./$(APP_NAME)
@@ -28,6 +28,9 @@ downse:
 
 resetse:
 	@GOOSE_DRIVER=$(GOOSE_DRIVER) GOOSE_DBSTRING=$(GOOSE_DBSTRING) goose -dir=$(GOOSE_MIGRATION_DIR) reset
+
+genSqlc:
+	sqlc generate
 
 .PHONY: run upse downse resetse
 

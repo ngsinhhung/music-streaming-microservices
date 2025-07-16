@@ -7,3 +7,8 @@ postgres:
   database: user_service
   user: root
   password: mysecretpassword
+redis:
+  host: localhost
+  port: 6379
+  password: ""
+  db: 0

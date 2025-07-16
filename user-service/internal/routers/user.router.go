@@ -2,7 +2,7 @@ package routers
 
 import (
 	"github.com/gin-gonic/gin"
-	"music-streaming-microservices/user-service/wire"
+	"music-streaming-microservices/user-service/pkg/wire"
 )
 
 type UserRouter struct {
@@ -14,7 +14,7 @@ func (ur *UserRouter) InitUserRouter(router *gin.RouterGroup) {
 
 	publicUserRouter := router.Group("/user")
 	{
-		publicUserRouter.GET("/signup", userController.Register)
+		publicUserRouter.POST("/signup", userController.Register)
 	}
 
 	privateUserRouter := router.Group("/user")
