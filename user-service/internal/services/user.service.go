@@ -12,7 +12,7 @@ import (
 
 type IUserService interface {
 	Register(userRegisterRequest validation.UserRegisterSchema) (code int, msg string, data interface{})
-	FromSchemaValidateToParams(avatar, email, name, password string) database.CreateUserParams
+	ConvertSchemaValidateToParams(avatar, email, name, password string) database.CreateUserParams
 	ToDTO(user database.User) dto.UsersDTO
 }
 
@@ -32,7 +32,7 @@ func (us *userService) Register(userRegisterRequest validation.UserRegisterSchem
 		return response.INTERNAL_SERVER_ERROR, "Failed to hash password", nil
 	}
 
-	userParams := us.FromSchemaValidateToParams(userRegisterRequest.Avatar, userRegisterRequest.Email, userRegisterRequest.Name, hashedPassword)
+	userParams := us.ConvertSchemaValidateToParams(userRegisterRequest.Avatar, userRegisterRequest.Email, userRegisterRequest.Name, hashedPassword)
 	fmt.Println(userParams)
 	newUser := us.userRepository.CreateNewUser(userParams)
 	fmt.Println(newUser.Email)
@@ -42,7 +42,7 @@ func (us *userService) Register(userRegisterRequest validation.UserRegisterSchem
 
 }
 
-func (us *userService) FromSchemaValidateToParams(avatar, email, name, password string) database.CreateUserParams {
+func (us *userService) ConvertSchemaValidateToParams(avatar, email, name, password string) database.CreateUserParams {
 	return database.CreateUserParams{
 		Avatar:   avatar,
 		Email:    email,
