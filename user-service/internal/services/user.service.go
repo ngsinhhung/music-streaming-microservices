@@ -1,7 +1,6 @@
 package services
 
 import (
-	"fmt"
 	"music-streaming-microservices/common-lib/response"
 	"music-streaming-microservices/user-service/internal/database"
 	"music-streaming-microservices/user-service/internal/models/dto"
@@ -33,11 +32,8 @@ func (us *userService) Register(userRegisterRequest validation.UserRegisterSchem
 	}
 
 	userParams := us.ConvertSchemaValidateToParams(userRegisterRequest.Avatar, userRegisterRequest.Email, userRegisterRequest.Name, hashedPassword)
-	fmt.Println(userParams)
 	newUser := us.userRepository.CreateNewUser(userParams)
-	fmt.Println(newUser.Email)
 	data = us.ToDTO(newUser)
-	fmt.Println(data)
 	return response.CREATED, "User created successfully", data
 
 }
