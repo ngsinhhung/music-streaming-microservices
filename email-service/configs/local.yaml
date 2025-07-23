@@ -1,0 +1,19 @@
+server:
+  port: 8081
+smtp:
+  host: smtp.gmail.com.
+  port: 587
+  from: "sinhhungmaths@gmail.com"
+  password: "mwmy fjlu kezw mifa"
+redis:
+  host: localhost
+  port: 6379
+  password: ""
+  db: 0
+nats:
+  host: localhost
+  port: 4222
+  streams:
+    - name: EMAIL
+      subjects:
+        - EMAIL.*
