@@ -1,14 +1,18 @@
 package services
 
 import (
+	"encoding/json"
 	"fmt"
+	"log"
 	"music-streaming-microservices/common-lib/response"
+	"music-streaming-microservices/user-service/global"
 	"music-streaming-microservices/user-service/internal/database"
 	"music-streaming-microservices/user-service/internal/models/dto"
 	"music-streaming-microservices/user-service/internal/repositories"
 	"music-streaming-microservices/user-service/internal/utils"
 	"music-streaming-microservices/user-service/internal/utils/hash"
 	"music-streaming-microservices/user-service/internal/utils/random"
+	"music-streaming-microservices/user-service/pkg/types"
 	"music-streaming-microservices/user-service/validation"
 	"time"
 )
@@ -27,7 +31,7 @@ type userService struct {
 func (us *userService) Register(userRegisterRequest validation.UserRegisterSchema) (code int, msg string, data interface{}) {
 	isEmailExist, _ := us.userRepository.IsEmailExist(userRegisterRequest.Email)
 	if isEmailExist {
-		return response.BAD_REQUEST, "Email already exists", nil
+		return response.BAD_REQUEST, "From already exists", nil
 	}
 
 	hashEmail := hash.GetHashString(userRegisterRequest.Email)
@@ -43,6 +47,35 @@ func (us *userService) Register(userRegisterRequest validation.UserRegisterSchem
 	if err != nil {
 		return response.INTERNAL_SERVER_ERROR, "Failed to send OTP", nil
 	}
+
+	subject := "EMAIL.VerifyOTP"
+	messageData := types.SendEmail{
+		Type:      "verify_otp",
+		Recipient: userRegisterRequest.Email,
+		Message: types.SendEmailOTPRegistry{
+			Key: key,
+		},
+	}
+	message, err := json.Marshal(messageData)
+	if err != nil {
+		return response.INTERNAL_SERVER_ERROR, "Failed to marshal message", nil
+	}
+
+	go func(subject string, message []byte) {
+		ack, err := global.NatsJetStream.Publish(subject, message)
+		if err != nil {
+			log.Printf("Error publishing message to subject %s: %v", subject, err)
+			return
+		}
+
+		if ack == nil {
+			log.Printf("Publish returned nil ack for subject %s", subject)
+			return
+		}
+
+		log.Printf("Message published to stream %s with sequence %d", ack.Stream, ack.Sequence)
+	}(subject, message)
+
 	return response.OK, "OTP sent successfully", nil
 
 	//hashedPassword, err := hash.HashPassword(userRegisterRequest.Password)
@@ -50,7 +83,7 @@ func (us *userService) Register(userRegisterRequest validation.UserRegisterSchem
 	//	return response.INTERNAL_SERVER_ERROR, "Failed to hash password", nil
 	//}
 
-	//userParams := us.ConvertSchemaValidateToParams(userRegisterRequest.Avatar, userRegisterRequest.Email, userRegisterRequest.Name, hashedPassword)
+	//userParams := us.ConvertSchemaValidateToParams(userRegisterRequest.Avatar, userRegisterRequest.From, userRegisterRequest.Name, hashedPassword)
 	//newUser := us.userRepository.CreateNewUser(userParams)
 	//data = us.ToDTO(newUser)
 	//return response.CREATED, "User created successfully", data

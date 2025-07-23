@@ -4,6 +4,7 @@ type Configs struct {
 	Server   ServerConfigs  `json:"server"`
 	Postgres PostgresConfig `json:"postgres"`
 	Redis    RedisConfig    `json:"redis"`
+	Nats     NatsConfig     `json:"nats"`
 }
 
 type RedisConfig struct {
@@ -24,4 +25,15 @@ type PostgresConfig struct {
 	User     string `json:"user"`
 	Password string `json:"password"`
 	Database string `json:"database"`
+}
+
+type NatsConfig struct {
+	Host    string          `json:"host"`
+	Port    string          `json:"port"`
+	Streams []StreamConfigs `json:"streams"`
+}
+
+type StreamConfigs struct {
+	Name     string   `json:"name"`
+	Subjects []string `json:"subjects"`
 }
