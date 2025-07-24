@@ -21,11 +21,9 @@ func Consumer() chan []*nats.Msg {
 		for {
 			msgs, err := sub.Fetch(5)
 			if err != nil {
-				if err == nats.ErrTimeout {
-					log.Println("No messages received in the last minute, continuing to wait...")
-					time.Sleep(1 * time.Minute)
-					continue
-				}
+				log.Printf("[WARN] Failed to fetch messages from stream %s: %v. Sleeping 30 seconds before retry...\n", global.Configs.Nats.Streams[0].Name, err)
+				time.Sleep(30 * time.Second)
+				continue
 			}
 			log.Printf("Received %d messages from stream %s", len(msgs), global.Configs.Nats.Streams[0].Name)
 			msgsCh <- msgs

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"music-streaming-microservices/common-lib/response"
+	"music-streaming-microservices/common-lib/types"
 	"music-streaming-microservices/user-service/global"
 	"music-streaming-microservices/user-service/internal/database"
 	"music-streaming-microservices/user-service/internal/models/dto"
@@ -12,7 +13,6 @@ import (
 	"music-streaming-microservices/user-service/internal/utils"
 	"music-streaming-microservices/user-service/internal/utils/hash"
 	"music-streaming-microservices/user-service/internal/utils/random"
-	"music-streaming-microservices/user-service/pkg/types"
 	"music-streaming-microservices/user-service/validation"
 	"time"
 )

@@ -3,11 +3,11 @@ package handler
 import (
 	"encoding/json"
 	"log"
+	common "music-streaming-microservices/common-lib/types"
 	"music-streaming-microservices/email-service/global"
 	"music-streaming-microservices/email-service/internal/consumer"
 	"music-streaming-microservices/email-service/internal/repository"
 	"music-streaming-microservices/email-service/internal/utils"
-	"music-streaming-microservices/email-service/pkg/types"
 	"net/smtp"
 )
 
@@ -34,7 +34,7 @@ func (h *handler) EmailHandler() {
 	for {
 		msgs := <-msgsCh
 		for _, msg := range msgs {
-			var payload types.SendEmail
+			var payload common.SendEmail
 			if err := json.Unmarshal(msg.Data, &payload); err != nil {
 				log.Printf("Failed to unmarshal message: ", err)
 				continue
@@ -45,7 +45,7 @@ func (h *handler) EmailHandler() {
 			switch payload.Type {
 			case "verify_otp":
 				go func() {
-					var message types.SendEmailOTPRegistry
+					var message common.SendEmailOTPRegistry
 					messageBytes, _ := json.Marshal(payload.Message)
 					if err := json.Unmarshal(messageBytes, &message); err != nil {
 						log.Printf("Failed to decode message data: ", err)

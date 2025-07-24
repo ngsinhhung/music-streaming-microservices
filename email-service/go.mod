@@ -7,6 +7,7 @@ require (
 	github.com/nats-io/nats.go v1.43.0
 	github.com/redis/go-redis/v9 v9.11.0
 	github.com/spf13/viper v1.20.1
+	music-streaming-microservices/common-lib v1.0.0
 )
 
 require (
@@ -31,3 +32,5 @@ require (
 	golang.org/x/text v0.24.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
 )
+
+replace music-streaming-microservices/common-lib => ../common-lib

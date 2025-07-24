@@ -11,3 +11,20 @@ services:
     command: >
       -js
       -m 8222
+
+  postgres:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: mysecretpassword
+      POSTGRES_DB: user_service
+    ports:
+      - "5433:5432"
+    volumes:
+      - "./pgData:/var/lib/postgresql/data"
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"
