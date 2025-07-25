@@ -9,6 +9,7 @@ import (
 type IUserAuthRepository interface {
 	AddData(key string, data interface{}) error
 	GetData(key string) (string, error)
+	DeleteData(key string) error
 }
 
 type userAuthRepository struct {
@@ -20,6 +21,10 @@ func (u *userAuthRepository) AddData(key string, data interface{}) error {
 
 func (u *userAuthRepository) GetData(key string) (string, error) {
 	return global.Redisdb.Get(ctx, key).Result()
+}
+
+func (u *userAuthRepository) DeleteData(key string) error {
+	return global.Redisdb.Del(ctx, key).Err()
 }
 
 func NewUserAuthRepository() IUserAuthRepository {

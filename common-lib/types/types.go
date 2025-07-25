@@ -4,10 +4,10 @@ type SendEmailOTPRegistry struct {
 	Key string `json:"key" `
 }
 
-type SendEmail struct {
-	Type      string      `json:"type"`
-	Recipient string      `json:"recipient"`
-	Message   interface{} `json:"message"`
+type SendEmail[T any] struct {
+	Type      string `json:"type"`
+	Recipient string `json:"recipient"`
+	Message   T      `json:"message"`
 }
 
 type OTPWithMetadata[T any] struct {

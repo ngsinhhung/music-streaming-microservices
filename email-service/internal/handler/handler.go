@@ -36,7 +36,7 @@ func (h *handler) EmailHandler() {
 	for {
 		msgs := <-msgsCh
 		for _, msg := range msgs {
-			var payload common.SendEmail
+			var payload common.SendEmail[common.SendEmailOTPRegistry]
 			if err := json.Unmarshal(msg.Data, &payload); err != nil {
 				log.Printf("Failed to unmarshal message: ", err)
 				continue
@@ -47,20 +47,13 @@ func (h *handler) EmailHandler() {
 			switch payload.Type {
 			case consts.VERIFY_OTP_USER_REGISTER:
 				go func() {
-					var message common.SendEmailOTPRegistry
-					messageBytes, _ := json.Marshal(payload.Message)
-					if err := json.Unmarshal(messageBytes, &message); err != nil {
-						log.Printf("Failed to decode message data: ", err)
-						return
-					}
-
-					data, err := h.IRepository.GetOTP(message.Key)
+					data, err := h.IRepository.GetOTP(payload.Message.Key)
 					if err != nil {
-						log.Printf("No OTP found for key: %s", message.Key)
+						log.Printf("No OTP found for key: %s", payload.Message.Key)
 						return
 					}
 
-					var otpWithMetadata common.OTPWithMetadata[common.SendEmailOTPRegistry]
+					var otpWithMetadata common.OTPWithMetadata[interface{}]
 					if err := json.Unmarshal([]byte(data), &otpWithMetadata); err != nil {
 						log.Printf("Failed to unmarshal OTP data: %v", err)
 						return

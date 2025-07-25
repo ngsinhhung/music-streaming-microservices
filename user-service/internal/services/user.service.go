@@ -3,6 +3,7 @@ package services
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/redis/go-redis/v9"
 	"log"
 	"music-streaming-microservices/common-lib/consts"
@@ -49,8 +50,6 @@ func (us *userService) Register(userRegisterRequest validation.UserRegisterSchem
 		return response.BAD_REQUEST, "OTP already exist", nil
 	}
 
-	otp := random.GenerateOTP()
-
 	hashedPassword, err := hash.HashPassword(userRegisterRequest.Password)
 	if err != nil {
 		return response.INTERNAL_SERVER_ERROR, "Failed to hash password", nil
@@ -59,7 +58,7 @@ func (us *userService) Register(userRegisterRequest validation.UserRegisterSchem
 	userRegisterRequest.Password = hashedPassword
 
 	var otpWithMetadata types.OTPWithMetadata[validation.UserRegisterSchema]
-	otpWithMetadata.OTP = otp
+	otpWithMetadata.OTP = random.GenerateOTP()
 	otpWithMetadata.Metadata = userRegisterRequest
 
 	jsonBytes, _ := json.Marshal(otpWithMetadata)
@@ -70,7 +69,7 @@ func (us *userService) Register(userRegisterRequest validation.UserRegisterSchem
 	}
 
 	subject := "EMAIL.VerifyOTP"
-	messageData := types.SendEmail{
+	messageData := types.SendEmail[types.SendEmailOTPRegistry]{
 		Type:      consts.VERIFY_OTP_USER_REGISTER,
 		Recipient: userRegisterRequest.Email,
 		Message: types.SendEmailOTPRegistry{
@@ -120,9 +119,16 @@ func (us *userService) VerifyOTPRequest(otpRequest validation.VerifyOTPRequest) 
 		return response.BAD_REQUEST, "Invalid OTP", nil
 	}
 
+	go func() {
+		if err := us.userAuthRepository.DeleteData(key); err != nil {
+			fmt.Printf("Failed to delete OTP Data: %v", err)
+		}
+	}()
+
 	userParams := us.ConvertSchemaValidateToParams(otpWithMetadata.Metadata.Avatar, otpWithMetadata.Metadata.Email, otpWithMetadata.Metadata.Name, otpWithMetadata.Metadata.Password)
 
 	newUser := us.userRepository.CreateNewUser(userParams)
+
 	data = us.ToDTO(newUser)
 	return response.CREATED, "User created successfully", data
 }

@@ -3,6 +3,7 @@ package consumer
 import (
 	"github.com/nats-io/nats.go"
 	"log"
+	"music-streaming-microservices/email-service/consts"
 	"music-streaming-microservices/email-service/global"
 	"time"
 )
@@ -21,8 +22,8 @@ func Consumer() chan []*nats.Msg {
 		for {
 			msgs, err := sub.Fetch(5)
 			if err != nil {
-				log.Printf("[WARN] Failed to fetch messages from stream %s: %v. Sleeping 30 seconds before retry...\n", global.Configs.Nats.Streams[0].Name, err)
-				time.Sleep(30 * time.Second)
+				log.Printf("[WARN] Failed to fetch messages from stream %s: %v. Sleeping 10 seconds before retry...\n", global.Configs.Nats.Streams[0].Name, err)
+				time.Sleep(consts.TIME_RETRY_FETCHING * time.Second)
 				continue
 			}
 			log.Printf("Received %d messages from stream %s", len(msgs), global.Configs.Nats.Streams[0].Name)
