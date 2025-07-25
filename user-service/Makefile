@@ -6,6 +6,7 @@ GOOSE_DBSTRING=postgres://root:mysecretpassword@localhost:5433/user_service
 APP_NAME := server
 
 dev:
+	@$(MAKE) upse
 	go run ./cmd/$(APP_NAME)
 
 run:

@@ -3,12 +3,14 @@ package handler
 import (
 	"encoding/json"
 	"log"
+	"music-streaming-microservices/common-lib/consts"
 	common "music-streaming-microservices/common-lib/types"
 	"music-streaming-microservices/email-service/global"
 	"music-streaming-microservices/email-service/internal/consumer"
 	"music-streaming-microservices/email-service/internal/repository"
 	"music-streaming-microservices/email-service/internal/utils"
 	"net/smtp"
+	"strconv"
 )
 
 type IHandler interface {
@@ -43,7 +45,7 @@ func (h *handler) EmailHandler() {
 			msg.Ack()
 
 			switch payload.Type {
-			case "verify_otp":
+			case consts.VERIFY_OTP_USER_REGISTER:
 				go func() {
 					var message common.SendEmailOTPRegistry
 					messageBytes, _ := json.Marshal(payload.Message)
@@ -52,13 +54,21 @@ func (h *handler) EmailHandler() {
 						return
 					}
 
-					otp := h.IRepository.GetOTP(message.Key)
-					if otp == "" {
+					data, err := h.IRepository.GetOTP(message.Key)
+					if err != nil {
 						log.Printf("No OTP found for key: %s", message.Key)
 						return
 					}
 
-					content := utils.BuildContentEmailOTPRegistry([]string{payload.Recipient}, global.Configs.SMTP.From, otp)
+					var otpWithMetadata common.OTPWithMetadata[common.SendEmailOTPRegistry]
+					if err := json.Unmarshal([]byte(data), &otpWithMetadata); err != nil {
+						log.Printf("Failed to unmarshal OTP data: %v", err)
+						return
+					}
+
+					otp := otpWithMetadata.OTP
+
+					content := utils.BuildContentEmailOTPRegistry([]string{payload.Recipient}, global.Configs.SMTP.From, strconv.Itoa(otp))
 					msg := utils.BuildMessageForEmail(content)
 					if err := h.SendEmailBySTMP(payload.Recipient, msg); err != nil {
 						log.Printf("Failed to send email to %s: %v", payload.Recipient, err)

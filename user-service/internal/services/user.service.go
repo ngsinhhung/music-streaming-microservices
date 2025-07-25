@@ -2,8 +2,10 @@ package services
 
 import (
 	"encoding/json"
-	"fmt"
+	"errors"
+	"github.com/redis/go-redis/v9"
 	"log"
+	"music-streaming-microservices/common-lib/consts"
 	"music-streaming-microservices/common-lib/response"
 	"music-streaming-microservices/common-lib/types"
 	"music-streaming-microservices/user-service/global"
@@ -13,12 +15,12 @@ import (
 	"music-streaming-microservices/user-service/internal/utils"
 	"music-streaming-microservices/user-service/internal/utils/hash"
 	"music-streaming-microservices/user-service/internal/utils/random"
-	"music-streaming-microservices/user-service/validation"
-	"time"
+	"music-streaming-microservices/user-service/internal/validation"
 )
 
 type IUserService interface {
 	Register(userRegisterRequest validation.UserRegisterSchema) (code int, msg string, data interface{})
+	VerifyOTPRequest(otpRequest validation.VerifyOTPRequest) (code int, msg string, data interface{})
 	ConvertSchemaValidateToParams(avatar, email, name, password string) database.CreateUserParams
 	ToDTO(user database.User) dto.UsersDTO
 }
@@ -35,22 +37,41 @@ func (us *userService) Register(userRegisterRequest validation.UserRegisterSchem
 	}
 
 	hashEmail := hash.GetHashString(userRegisterRequest.Email)
-	otp := random.GenerateOTP()
-
-	fmt.Printf("Generated OTP for email %s: %d\n", hashEmail, otp)
-
 	key := utils.GetKeyOTP(hashEmail)
 
-	fmt.Println(key)
+	otpFound, err := us.userAuthRepository.GetData(key)
+	switch {
+	case errors.Is(err, redis.Nil):
+		log.Println("Key does not exist")
+	case err != nil:
+		return response.INTERNAL_SERVER_ERROR, "Failed to retrieve OTP data", nil
+	case otpFound != "":
+		return response.BAD_REQUEST, "OTP already exist", nil
+	}
 
-	err := us.userAuthRepository.AddOTP(key, otp, int64(5*time.Minute)) // 5 minutes expiration
+	otp := random.GenerateOTP()
+
+	hashedPassword, err := hash.HashPassword(userRegisterRequest.Password)
+	if err != nil {
+		return response.INTERNAL_SERVER_ERROR, "Failed to hash password", nil
+	}
+
+	userRegisterRequest.Password = hashedPassword
+
+	var otpWithMetadata types.OTPWithMetadata[validation.UserRegisterSchema]
+	otpWithMetadata.OTP = otp
+	otpWithMetadata.Metadata = userRegisterRequest
+
+	jsonBytes, _ := json.Marshal(otpWithMetadata)
+
+	err = us.userAuthRepository.AddData(key, jsonBytes)
 	if err != nil {
 		return response.INTERNAL_SERVER_ERROR, "Failed to send OTP", nil
 	}
 
 	subject := "EMAIL.VerifyOTP"
 	messageData := types.SendEmail{
-		Type:      "verify_otp",
+		Type:      consts.VERIFY_OTP_USER_REGISTER,
 		Recipient: userRegisterRequest.Email,
 		Message: types.SendEmailOTPRegistry{
 			Key: key,
@@ -78,16 +99,32 @@ func (us *userService) Register(userRegisterRequest validation.UserRegisterSchem
 
 	return response.OK, "OTP sent successfully", nil
 
-	//hashedPassword, err := hash.HashPassword(userRegisterRequest.Password)
-	//if err != nil {
-	//	return response.INTERNAL_SERVER_ERROR, "Failed to hash password", nil
-	//}
+}
 
-	//userParams := us.ConvertSchemaValidateToParams(userRegisterRequest.Avatar, userRegisterRequest.From, userRegisterRequest.Name, hashedPassword)
-	//newUser := us.userRepository.CreateNewUser(userParams)
-	//data = us.ToDTO(newUser)
-	//return response.CREATED, "User created successfully", data
+func (us *userService) VerifyOTPRequest(otpRequest validation.VerifyOTPRequest) (code int, msg string, data interface{}) {
+	email := otpRequest.Email
+	hashEmail := hash.GetHashString(email)
+	key := utils.GetKeyOTP(hashEmail)
 
+	data, err := us.userAuthRepository.GetData(key)
+	if err != nil {
+		return response.INTERNAL_SERVER_ERROR, "Failed to retrieve OTP data", nil
+	}
+
+	var otpWithMetadata types.OTPWithMetadata[validation.UserRegisterSchema]
+	if err := json.Unmarshal([]byte(data.(string)), &otpWithMetadata); err != nil {
+		return response.INTERNAL_SERVER_ERROR, "Failed to unmarshal OTP data", nil
+	}
+
+	if otpWithMetadata.OTP != otpRequest.OTP {
+		return response.BAD_REQUEST, "Invalid OTP", nil
+	}
+
+	userParams := us.ConvertSchemaValidateToParams(otpWithMetadata.Metadata.Avatar, otpWithMetadata.Metadata.Email, otpWithMetadata.Metadata.Name, otpWithMetadata.Metadata.Password)
+
+	newUser := us.userRepository.CreateNewUser(userParams)
+	data = us.ToDTO(newUser)
+	return response.CREATED, "User created successfully", data
 }
 
 func (us *userService) ConvertSchemaValidateToParams(avatar, email, name, password string) database.CreateUserParams {

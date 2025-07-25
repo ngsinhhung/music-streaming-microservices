@@ -9,3 +9,8 @@ type SendEmail struct {
 	Recipient string      `json:"recipient"`
 	Message   interface{} `json:"message"`
 }
+
+type OTPWithMetadata[T any] struct {
+	OTP      int `json:"otp"`
+	Metadata T   `json:"metadata"`
+}

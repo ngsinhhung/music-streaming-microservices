@@ -4,8 +4,8 @@ import (
 	"github.com/gin-gonic/gin"
 	r "music-streaming-microservices/common-lib/response"
 	"music-streaming-microservices/user-service/internal/services"
+	"music-streaming-microservices/user-service/internal/validation"
 	"music-streaming-microservices/user-service/pkg/response"
-	"music-streaming-microservices/user-service/validation"
 )
 
 type UserController struct {
@@ -31,4 +31,18 @@ func (uc *UserController) Register(c *gin.Context) {
 		response.ErrorResponse(c, code, msg, nil)
 	}
 	return
+}
+
+func (uc *UserController) VerifyOTP(c *gin.Context) {
+	var verifyOTPRequest validation.VerifyOTPRequest
+	if err := c.ShouldBindJSON(&verifyOTPRequest); err != nil {
+		response.ErrorResponse(c, r.BAD_REQUEST, "", err)
+		return
+	}
+	code, msg, data := uc.userServices.VerifyOTPRequest(verifyOTPRequest)
+	if code == r.CREATED {
+		response.SuccessResponse(c, code, msg, data)
+	} else {
+		response.ErrorResponse(c, code, msg, nil)
+	}
 }
