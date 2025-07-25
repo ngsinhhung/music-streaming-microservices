@@ -1,0 +1,85 @@
+package handler
+
+import (
+	"encoding/json"
+	"log"
+	"music-streaming-microservices/common-lib/consts"
+	common "music-streaming-microservices/common-lib/types"
+	"music-streaming-microservices/email-service/global"
+	"music-streaming-microservices/email-service/internal/consumer"
+	"music-streaming-microservices/email-service/internal/repository"
+	"music-streaming-microservices/email-service/internal/utils"
+	"net/smtp"
+	"strconv"
+)
+
+type IHandler interface {
+	SendEmailBySTMP(recipient string, content interface{}) error
+	EmailHandler()
+}
+
+type handler struct {
+	repository.IRepository
+}
+
+func (h *handler) SendEmailBySTMP(recipient string, content interface{}) error {
+	auth := smtp.PlainAuth("", global.Configs.SMTP.From, global.Configs.SMTP.Password, global.Configs.SMTP.Host)
+	err := smtp.SendMail(global.Configs.SMTP.Host+":"+global.Configs.SMTP.Port, auth, global.Configs.SMTP.From, []string{recipient}, []byte(content.(string)))
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (h *handler) EmailHandler() {
+	msgsCh := consumer.Consumer()
+	for {
+		msgs := <-msgsCh
+		for _, msg := range msgs {
+			var payload common.SendEmail[common.SendEmailOTPRegistry]
+			if err := json.Unmarshal(msg.Data, &payload); err != nil {
+				log.Printf("Failed to unmarshal message: ", err)
+				continue
+			}
+
+			msg.Ack()
+
+			switch payload.Type {
+			case consts.VERIFY_OTP_USER_REGISTER:
+				go func() {
+					data, err := h.IRepository.GetOTP(payload.Message.Key)
+					if err != nil {
+						log.Printf("No OTP found for key: %s", payload.Message.Key)
+						return
+					}
+
+					var otpWithMetadata common.OTPWithMetadata[interface{}]
+					if err := json.Unmarshal([]byte(data), &otpWithMetadata); err != nil {
+						log.Printf("Failed to unmarshal OTP data: %v", err)
+						return
+					}
+
+					otp := otpWithMetadata.OTP
+
+					content := utils.BuildContentEmailOTPRegistry([]string{payload.Recipient}, global.Configs.SMTP.From, strconv.Itoa(otp))
+					msg := utils.BuildMessageForEmail(content)
+					if err := h.SendEmailBySTMP(payload.Recipient, msg); err != nil {
+						log.Printf("Failed to send email to %s: %v", payload.Recipient, err)
+					} else {
+						log.Printf("Email sent successfully to %s", payload.Recipient)
+					}
+					return
+				}()
+
+			default:
+				log.Printf("Unknown email type: %s", payload.Type)
+			}
+		}
+	}
+}
+
+func NewHandler(repository repository.IRepository) IHandler {
+	return &handler{
+		IRepository: repository,
+	}
+}

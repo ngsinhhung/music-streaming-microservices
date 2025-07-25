@@ -5,6 +5,7 @@ func Run() {
 
 	InitPostgres()
 	InitRedis()
+	InitNats()
 
 	r := InitRouter()
 	r.Run()

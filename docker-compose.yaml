@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  nats:
+    image: nats:alpine
+    container_name: nats
+    ports:
+      - "4222:4222"
+      - "6222:6222"
+      - "8222:8222"
+    command: >
+      -js
+      -m 8222
+
+  postgres:
+    image: postgres:latest
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: mysecretpassword
+      POSTGRES_DB: user_service
+    ports:
+      - "5433:5432"
+    volumes:
+      - "./pgData:/var/lib/postgresql/data"
+
+  redis:
+    image: redis:7-alpine
+    container_name: redis
+    ports:
+      - "6379:6379"

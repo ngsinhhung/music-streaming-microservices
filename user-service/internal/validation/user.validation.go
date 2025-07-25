@@ -6,3 +6,8 @@ type UserRegisterSchema struct {
 	Avatar   string `json:"avatar" validate:"omitempty,url"`
 	Password string `json:"password" validate:"required,min=8,max=50"`
 }
+
+type VerifyOTPRequest struct {
+	Email string `json:"email" validate:"required"`
+	OTP   int    `json:"otp" validate:"required"`
+}

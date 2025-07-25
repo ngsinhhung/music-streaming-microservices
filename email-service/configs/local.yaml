@@ -1,12 +1,10 @@
 server:
-  port: 8080
-  mode: dev
-postgres:
-  host: localhost
-  port: 5433
-  database: user_service
-  user: root
-  password: mysecretpassword
+  port: 8081
+smtp:
+  host: smtp.gmail.com.
+  port: 587
+  from: "sinhhungmaths@gmail.com"
+  password: "mwmy fjlu kezw mifa"
 redis:
   host: localhost
   port: 6379
