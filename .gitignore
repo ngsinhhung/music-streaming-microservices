@@ -26,6 +26,7 @@ go.work.sum
 
 # env file
 .env
+email-service/configs/local.yaml
 
 # Editor/IDE
  .idea/
