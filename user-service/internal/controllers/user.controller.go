@@ -3,6 +3,7 @@ package controllers
 import (
 	"github.com/gin-gonic/gin"
 	r "music-streaming-microservices/common-lib/response"
+	"music-streaming-microservices/user-service/internal/helper"
 	"music-streaming-microservices/user-service/internal/services"
 	"music-streaming-microservices/user-service/internal/validation"
 	"music-streaming-microservices/user-service/pkg/response"
@@ -16,6 +17,24 @@ func NewUserController(services services.IUserService) *UserController {
 	return &UserController{
 		userServices: services,
 	}
+}
+
+func (uc *UserController) Login(c *gin.Context) {
+	var userLoginRequest validation.UserLoginSchema
+	if err := c.ShouldBindJSON(&userLoginRequest); err != nil {
+		response.ErrorResponse(c, r.BAD_REQUEST, "", err)
+		return
+	}
+	code, msg, data := uc.userServices.Login(userLoginRequest)
+	tokenPair := data.(helper.TokenPair)
+	if code == r.OK {
+		c.Header("Authorization", "Bearer "+tokenPair.Token)
+		c.Header("X-Refresh-Token", tokenPair.RfToken)
+		response.SuccessResponse(c, code, msg, nil)
+	} else {
+		response.ErrorResponse(c, code, msg, nil)
+	}
+	return
 }
 
 func (uc *UserController) Register(c *gin.Context) {

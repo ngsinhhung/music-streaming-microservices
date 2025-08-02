@@ -2,12 +2,13 @@ package repositories
 
 import (
 	"fmt"
+	"log"
 	"music-streaming-microservices/user-service/global"
 	"music-streaming-microservices/user-service/internal/database"
 )
 
 type IUserRepository interface {
-	GetUserByEmail(email string) (bool, error)
+	GetUserByEmail(email string) (database.User, error)
 	GetUserById(id int) (bool, error)
 	IsEmailExist(email string) (bool, error)
 	CreateNewUser(userParams database.CreateUserParams) database.User
@@ -32,9 +33,12 @@ func (ur *userRepository) IsEmailExist(email string) (bool, error) {
 
 }
 
-func (ur *userRepository) GetUserByEmail(email string) (bool, error) {
-	//TODO implement me
-	panic("implement me")
+func (ur *userRepository) GetUserByEmail(email string) (database.User, error) {
+	user, err := ur.sqlc.GetUserByEmail(ctx, email)
+	if err != nil {
+		log.Fatalf("Error getting user by email: %v", err)
+	}
+	return user, nil
 }
 
 func (ur *userRepository) GetUserById(id int) (bool, error) {

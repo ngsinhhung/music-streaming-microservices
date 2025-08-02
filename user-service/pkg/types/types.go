@@ -37,3 +37,11 @@ type StreamConfigs struct {
 	Name     string   `json:"name"`
 	Subjects []string `json:"subjects"`
 }
+
+type PublicKey struct {
+	Key string
+}
+
+type PrivateKey struct {
+	Key string
+}

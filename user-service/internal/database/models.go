@@ -23,6 +23,16 @@ type User struct {
 	UpdatedAt pgtype.Timestamp
 }
 
+type UserLoginSession struct {
+	ID          int32
+	UserID      int64
+	PublicKey   string
+	RfToken     string
+	RfTokenUsed []string
+	CreatedAt   pgtype.Timestamp
+	UpdatedAt   pgtype.Timestamp
+}
+
 type UserRole struct {
 	UserID int32
 	RoleID int32

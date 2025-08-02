@@ -11,6 +11,7 @@ import (
 	"music-streaming-microservices/common-lib/types"
 	"music-streaming-microservices/user-service/global"
 	"music-streaming-microservices/user-service/internal/database"
+	"music-streaming-microservices/user-service/internal/helper"
 	"music-streaming-microservices/user-service/internal/models/dto"
 	"music-streaming-microservices/user-service/internal/repositories"
 	"music-streaming-microservices/user-service/internal/utils"
@@ -20,6 +21,7 @@ import (
 )
 
 type IUserService interface {
+	Login(schema validation.UserLoginSchema) (code int, msg string, data interface{})
 	Register(userRegisterRequest validation.UserRegisterSchema) (code int, msg string, data interface{})
 	VerifyOTPRequest(otpRequest validation.VerifyOTPRequest) (code int, msg string, data interface{})
 	ConvertSchemaValidateToParams(avatar, email, name, password string) database.CreateUserParams
@@ -27,8 +29,47 @@ type IUserService interface {
 }
 
 type userService struct {
-	userRepository     repositories.IUserRepository
-	userAuthRepository repositories.IUserAuthRepository
+	userRepository             repositories.IUserRepository
+	userAuthRepository         repositories.IUserAuthRepository
+	userLoginSessionRepository repositories.IUserLoginSessionRepository
+}
+
+func (us *userService) Login(userLogin validation.UserLoginSchema) (code int, msg string, data interface{}) {
+	user, err := us.userRepository.GetUserByEmail(userLogin.Email)
+	if err != nil {
+		return response.NOT_FOUND, "User not found", nil
+	}
+
+	if !hash.MatchingWithHashPassword(user.Password, userLogin.Password) {
+		return response.UNAUTHORIZED, "Invalid password", nil
+	}
+
+	key := helper.GenerateKey()
+	token, err := helper.CreateTokenPair(user.ID, key)
+	if err != nil {
+		return response.INTERNAL_SERVER_ERROR, "Failed to create token", nil
+	}
+
+	publicKey, err := helper.GetPublicKeyString(key)
+	if err != nil {
+		log.Printf("Failed to get public key string: %v", err)
+		return
+	}
+
+	sessionParams := database.CreateLoginSessionParams{
+		UserID:      int64(user.ID),
+		PublicKey:   publicKey,
+		RfToken:     token.RfToken,
+		RfTokenUsed: []string{},
+	}
+
+	session, err := us.userLoginSessionRepository.CreateLoginSession(sessionParams)
+	if err != nil {
+		log.Printf("Failed to create login : %v", err)
+		return
+	}
+	log.Printf("Created login session for user: %v", session.UserID)
+	return response.OK, "Login successful", token
 }
 
 func (us *userService) Register(userRegisterRequest validation.UserRegisterSchema) (code int, msg string, data interface{}) {
@@ -156,9 +197,11 @@ func (us *userService) ToDTO(user database.User) dto.UsersDTO {
 func NewUserService(
 	userRepository repositories.IUserRepository,
 	userAuthRepository repositories.IUserAuthRepository,
+	userLoginSessionRepository repositories.IUserLoginSessionRepository,
 ) IUserService {
 	return &userService{
-		userRepository:     userRepository,
-		userAuthRepository: userAuthRepository,
+		userRepository:             userRepository,
+		userAuthRepository:         userAuthRepository,
+		userLoginSessionRepository: userLoginSessionRepository,
 	}
 }

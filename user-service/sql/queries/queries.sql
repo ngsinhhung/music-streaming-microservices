@@ -8,3 +8,13 @@ SELECT EXISTS(SELECT 1 FROM users WHERE email = $1);
 INSERT INTO users (avatar, email, name, password)
 VALUES ($1, $2, $3, $4)
 RETURNING *;
+
+-- name: GetLoginSessionByUserId :one
+SELECT * FROM user_login_session WHERE user_id = $1 LIMIT 1;
+
+-- name: CreateLoginSession :one
+INSERT INTO user_login_session (user_id, public_key, rf_token, rf_token_used)
+VALUES ($1, $2, $3, $4)
+RETURNING *;
+
+-- name: UpdateLoginSession :one

@@ -9,6 +9,39 @@ import (
 	"context"
 )
 
+const createLoginSession = `-- name: CreateLoginSession :one
+INSERT INTO user_login_session (user_id, public_key, rf_token, rf_token_used)
+VALUES ($1, $2, $3, $4)
+RETURNING id, user_id, public_key, rf_token, rf_token_used, created_at, updated_at
+`
+
+type CreateLoginSessionParams struct {
+	UserID      int64
+	PublicKey   string
+	RfToken     string
+	RfTokenUsed []string
+}
+
+func (q *Queries) CreateLoginSession(ctx context.Context, arg CreateLoginSessionParams) (UserLoginSession, error) {
+	row := q.db.QueryRow(ctx, createLoginSession,
+		arg.UserID,
+		arg.PublicKey,
+		arg.RfToken,
+		arg.RfTokenUsed,
+	)
+	var i UserLoginSession
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.PublicKey,
+		&i.RfToken,
+		&i.RfTokenUsed,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const createUser = `-- name: CreateUser :one
 INSERT INTO users (avatar, email, name, password)
 VALUES ($1, $2, $3, $4)
@@ -36,6 +69,25 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 		&i.Email,
 		&i.Name,
 		&i.Password,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
+const getLoginSessionByUserId = `-- name: GetLoginSessionByUserId :one
+SELECT id, user_id, public_key, rf_token, rf_token_used, created_at, updated_at FROM user_login_session WHERE user_id = $1 LIMIT 1
+`
+
+func (q *Queries) GetLoginSessionByUserId(ctx context.Context, userID int64) (UserLoginSession, error) {
+	row := q.db.QueryRow(ctx, getLoginSessionByUserId, userID)
+	var i UserLoginSession
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.PublicKey,
+		&i.RfToken,
+		&i.RfTokenUsed,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
