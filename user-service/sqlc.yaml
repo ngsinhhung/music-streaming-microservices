@@ -9,3 +9,8 @@ sql:
         out: "internal/database"
         sql_package: "pgx/v5"
         emit_pointers_for_null_types: true
+        overrides:
+          - db_type: "uuid"
+            go_type:
+              import: "github.com/google/uuid"
+              type: "UUID"

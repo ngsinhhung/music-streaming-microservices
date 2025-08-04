@@ -6,15 +6,15 @@ import (
 )
 
 type IUserLoginSessionRepository interface {
-	CreateLoginSession(sessionParams database.CreateLoginSessionParams) (database.UserLoginSession, error)
+	CreateLoginSession(sessionParams database.CreateUserLoginSessionParams) (database.UserLoginSession, error)
 }
 
 type UserLoginSessionRepository struct {
 	sqlc *database.Queries
 }
 
-func (u *UserLoginSessionRepository) CreateLoginSession(sessionParams database.CreateLoginSessionParams) (database.UserLoginSession, error) {
-	userLoginSession, err := u.sqlc.CreateLoginSession(ctx, sessionParams)
+func (u *UserLoginSessionRepository) CreateLoginSession(sessionParams database.CreateUserLoginSessionParams) (database.UserLoginSession, error) {
+	userLoginSession, err := u.sqlc.CreateUserLoginSession(ctx, sessionParams)
 	return userLoginSession, err
 }
 

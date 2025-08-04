@@ -45,18 +45,21 @@ func (us *userService) Login(userLogin validation.UserLoginSchema) (code int, ms
 	}
 
 	key := helper.GenerateKey()
-	token, err := helper.CreateTokenPair(user.ID, key)
-	if err != nil {
-		return response.INTERNAL_SERVER_ERROR, "Failed to create token", nil
-	}
-
 	publicKey, err := helper.GetPublicKeyString(key)
 	if err != nil {
 		log.Printf("Failed to get public key string: %v", err)
 		return
 	}
 
-	sessionParams := database.CreateLoginSessionParams{
+	uuid := helper.GenerateJTI()
+
+	token, err := helper.CreateTokenPair(uuid.String(), user, key)
+	if err != nil {
+		return response.INTERNAL_SERVER_ERROR, "Failed to create token", nil
+	}
+
+	sessionParams := database.CreateUserLoginSessionParams{
+		Uuid:        uuid,
 		UserID:      int64(user.ID),
 		PublicKey:   publicKey,
 		RfToken:     token.RfToken,

@@ -5,6 +5,7 @@
 package database
 
 import (
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -24,7 +25,7 @@ type User struct {
 }
 
 type UserLoginSession struct {
-	ID          int32
+	Uuid        uuid.UUID
 	UserID      int64
 	PublicKey   string
 	RfToken     string
