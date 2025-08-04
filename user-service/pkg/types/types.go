@@ -37,3 +37,13 @@ type StreamConfigs struct {
 	Name     string   `json:"name"`
 	Subjects []string `json:"subjects"`
 }
+
+type PayloadAccessToken struct {
+	UserID int64  `json:"user_id"`
+	Email  string `json:"email"`
+}
+
+type PayloadRefreshToken struct {
+	UserID int64  `json:"user_id"`
+	JTI    string `json:"jti"`
+}

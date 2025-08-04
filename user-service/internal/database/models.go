@@ -5,6 +5,7 @@
 package database
 
 import (
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
@@ -21,6 +22,16 @@ type User struct {
 	Password  string
 	CreatedAt pgtype.Timestamp
 	UpdatedAt pgtype.Timestamp
+}
+
+type UserLoginSession struct {
+	Uuid        uuid.UUID
+	UserID      int64
+	PublicKey   string
+	RfToken     string
+	RfTokenUsed []string
+	CreatedAt   pgtype.Timestamp
+	UpdatedAt   pgtype.Timestamp
 }
 
 type UserRole struct {
